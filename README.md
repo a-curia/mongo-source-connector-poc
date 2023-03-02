@@ -1,1 +1,1 @@
-# mogo-source-connector-poc
+# mongo-source-connector-poc
