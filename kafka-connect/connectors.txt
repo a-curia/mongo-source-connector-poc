@@ -1,0 +1,151 @@
+curl -X POST -H "Content-Type: application/json" --data '
+{
+  "name": "mongo-source",
+  "config": {
+    "name": "mongo-source",
+    "connector.class": "com.mongodb.kafka.connect.MongoSourceConnector",
+    "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "errors.retry.timeout": "20000",
+    "errors.retry.delay.max.ms": "1000",
+    "offsets.storage.topic": "test_offsets_topic",
+    "connection.uri": "mongodb://mongo1:27018,mongo2:27019,mongo3:27020/",
+    "database": "test",
+    "collection": "testCollection",
+    "batch.size": "100",
+    "topic.prefix": "mongo",
+    "startup.mode": "latest",
+    "heartbeat.interval.ms": "10000",
+    "offset.partition.name": "mongo_source"
+  }
+}' http://localhost:8083/connectors -w "\n"
+
+
+curl -X POST -H "Content-Type: application/json" --data '
+{
+  "name": "mongo-source",
+  "config": {
+    "name": "mongo-source",
+    "connector.class": "com.mongodb.kafka.connect.MongoSourceConnector",
+    "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "errors.retry.timeout": "20000",
+    "errors.retry.delay.max.ms": "1000",
+    "connection.uri": "mongodb://mongo1:27018,mongo2:27019,mongo3:27020/",
+    "database": "test",
+    "collection": "testCollection",
+    "batch.size": "100",
+    "topic.prefix": "mongo",
+    "heartbeat.interval.ms": "10000",
+    "offset.partition.name": "mongo-source-token-invalid"
+  }
+}' http://localhost:8083/connectors -w "\n"
+
+
+---two sources
+
+curl -X POST -H "Content-Type: application/json" --data '
+{
+  "name": "mongo-cursor1",
+  "config": {
+    "name": "mongo-cursor1",
+    "connector.class": "com.mongodb.kafka.connect.MongoSourceConnector",
+    "tasks.max": "3",
+    "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "errors.retry.timeout": "20000",
+    "errors.retry.delay.max.ms": "1000",
+    "database": "test",
+    "collection": "testCollection",
+    "connection.uri": "mongodb://mongo1:27018,mongo2:27019,mongo3:27020/",
+    "pipeline": "[{\"$match\":{\"$and\":[{\"ns.db\":{\"$regex\":/^test$/}},{\"ns.coll\":{\"$regex\":/^test.*/}},{\"docId\":{\"$mod\" : [2,0]}}]}}]",
+    "batch.size": "100",
+    "topic.prefix": "mongo",
+    "heartbeat.interval.ms": "10000",
+    "offset.partition.name": "mongo-source-token-invalid"
+  }
+}' http://localhost:8083/connectors -w "\n"
+
+-----------------------------------------------------------------------------
+curl -X POST -H "Content-Type: application/json" --data '
+{
+  "name": "mongo-cursor1",
+  "config": {
+    "name": "mongo-cursor1",
+    "connector.class": "com.mongodb.kafka.connect.MongoSourceConnector",
+    "tasks.max": "3",
+    "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "errors.retry.timeout": "20000",
+    "errors.retry.delay.max.ms": "1000",
+    "connection.uri": "mongodb://mongo1:27018,mongo2:27019,mongo3:27020/",
+    "pipeline": "",
+    "batch.size": "100",
+    "heartbeat.interval.ms": "10000",
+    "database": "test",
+    "collection": "testCollection1",
+    "offset.partition.name": "mongo-source-token-invalid"
+  }
+}' http://localhost:8083/connectors -w "\n"
+
+
+curl -X POST -H "Content-Type: application/json" --data '
+{
+  "name": "mongo-cursor2",
+  "config": {
+    "name": "mongo-cursor2",
+    "connector.class": "com.mongodb.kafka.connect.MongoSourceConnector",
+    "tasks.max": "3",
+    "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "errors.retry.timeout": "20000",
+    "errors.retry.delay.max.ms": "1000",
+    "connection.uri": "mongodb://mongo1:27018,mongo2:27019,mongo3:27020/",
+    "pipeline": "",
+    "batch.size": "100",
+    "heartbeat.interval.ms": "10000",
+    "database": "test",
+    "collection": "testCollection2",
+    "offset.partition.name": "mongo-source-token-invalid"
+  }
+}' http://localhost:8083/connectors -w "\n"
+----------------------------------------------------------------------------------
+
+
+curl -X POST -H "Content-Type: application/json" --data '
+  {"name": "mongo-sink",
+   "config": {
+     "connector.class":"com.mongodb.kafka.connect.MongoSinkConnector",
+     "tasks.max":"1",
+     "topics":"mongo.test.testCollection",
+     "connection.uri":"mongodb://mongo1:27018,mongo2:27019,mongo3:27020/",
+     "database":"test",
+     "collection":"kafkaTestCollection",
+     "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+     "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+     "value.converter.schemas.enable": "false"
+}}' http://localhost:8083/connectors -w "\n"
+
+{
+  "name": "mongo-source",
+  "config": {
+    "name": "mongo-source",
+    "connector.class": "com.mongodb.kafka.connect.MongoSourceConnector",
+    "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "errors.retry.timeout": "20000",
+    "errors.retry.delay.max.ms": "1000",
+    "offsets.storage.topic": "test_offsets_topic",
+    "connection.uri": "mongodb://mongo1:27018,mongo2:27019,mongo3:27020/",
+    "database": "test",
+    "collection": "testCollection",
+    "batch.size": "100",
+    "topic.prefix": "mongo",
+    "heartbeat.interval.ms": "10000",
+    "offset.partition.name": "mongo-source-token-invalid.1"
+  }
+}
+
+db.adminCommand({replSetResizeOplog: 1, size: 1000})
+
+db.getReplicationInfo()
